@@ -33,28 +33,6 @@ class TestCompanionComputer(CompanionComputer):
         self.lock = threading.Lock()
         self.handleRecievedMsgThread = None
 
-        #Initialise SITL driver
-        self.lidar = driver.SensorDriver('SITL')
-
-        #Connect to the listener - ensure the listener is running in background!!
-        self.lidar.connect_and_fetch()
-
-        #Front sensor
-        #self.front_sensor = estimation.Sensor(1,1*math.pi/180,12,0.01,0)
-        #SITL
-        self.front_sensor = estimation.Sensor(1,0.03098,40,1,-0.976)  
-
-        #Initialise pre processor
-        self.coordinate_transform = estimation.DataPreProcessor()
-
-        #initialise navigation controller
-        self.navigation_controller = control.ObstacleAvoidance(max_obs=25)
-
-        self.navigation_map = estimation.DataPostProcessor()
-
-        #Initialize vector class of Vectormath
-        self.vec = vmath.vector()
-
 
         #Brake
         self.brake = 0
