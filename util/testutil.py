@@ -212,20 +212,20 @@ class TestCompanionComputer(CompanionComputer):
         if self.navigation_controller.ctrl and self.navigation_controller.guide:
             # Navigate rightward unless drone sees safe angle
             if not self.navigation_controller.stop and not self.navigation_controller.avoided:
-                self.mavlinkInterface.mavConnection.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message( 10, self.mavlinkInterface.mavConnection.target_system, self.mavlinkInterface.mavConnection.target_component, mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, int(0b010111000111), 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0))
-                ##print('Moving right !!!')
+                self.mavlinkInterface.mavConnection.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message( 10, self.mavlinkInterface.mavConnection.target_system, self.mavlinkInterface.mavConnection.target_component, mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, int(0b010111000111), 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0))
+                print('Moving right !!!')
 
             # Stop command in Guided mode
             if self.navigation_controller.stop and not self.navigation_controller.avoided:
                 self.mavlinkInterface.mavConnection.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message( 10, self.mavlinkInterface.mavConnection.target_system, self.mavlinkInterface.mavConnection.target_component, mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, int(0b010111000111), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
-                ##print('Forced Stop !')
+                print('Forced Stop !')
 
             # Moving Forward command in Guided mode
             #print(f'                                                  {not self.navigation_controller.stop and self.navigation_controller.avoided}')
             if not self.navigation_controller.stop and self.navigation_controller.avoided:
                 #print('                                                                                      Forward movement maneuver condition')
-                self.mavlinkInterface.mavConnection.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message( 10, self.mavlinkInterface.mavConnection.target_system, self.mavlinkInterface.mavConnection.target_component, mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, int(0b110111000111), 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0))
-                ##print('Moving forward !!!')
+                self.mavlinkInterface.mavConnection.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message( 10, self.mavlinkInterface.mavConnection.target_system, self.mavlinkInterface.mavConnection.target_component, mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, int(0b110111000111), 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0))
+                print('Moving forward !!!')
 
     def termination(self):
         '''Flight Test safety purpose'''
