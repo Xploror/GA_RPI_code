@@ -95,12 +95,12 @@ class TestCompanionComputer(CompanionComputer):
         self.handleRecievedMsgThread.start()
 
         #Scheduled the threads
-        self.scheduledTaskList.append(ScheduleTask(0.02, self.lidar.update_sitl_sensor))
+        #self.scheduledTaskList.append(ScheduleTask(0.02, self.lidar.update_sitl_sensor))
         self.scheduledTaskList.append(ScheduleTask(0.008, self.update_vars))
         self.scheduledTaskList.append(ScheduleTask(0.5, self.previous_position_storer))
         #self.scheduledTaskList.append(ScheduleTask(0.000000000000000001, self.lidar.give_scan_values))
         #self.give_scan_values()
-        # self.scheduledTaskList.append(ScheduleTask(0.00002,self.lidar.update_rplidar))
+        self.scheduledTaskList.append(ScheduleTask(0.00002,self.lidar.update_rplidar))
         self.scheduledTaskList.append(ScheduleTask(0.02,self.front_sensor.handle_raw_data))
         self.scheduledTaskList.append(ScheduleTask(0.02, self.coordinate_transform.update_vehicle_states))
         self.scheduledTaskList.append(ScheduleTask(0.02, self.coordinate_transform.convert_body_to_inertial_frame))
