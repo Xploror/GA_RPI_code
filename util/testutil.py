@@ -32,6 +32,27 @@ class TestCompanionComputer(CompanionComputer):
         # Threading Lock for TestCompanionComputer Class
         self.lock = threading.Lock()
         self.handleRecievedMsgThread = None
+        
+        self.lidar = driver.SensorDriver('RPLidar')
+
+        #Connect to the listener - ensure the listener is running in background!!
+        self.lidar.connect_and_fetch()
+
+        #Front sensor
+        #self.front_sensor = estimation.Sensor(1,1*math.pi/180,12,0.01,0)
+        #SITL
+        self.front_sensor = estimation.Sensor(1, 1*math.pi/180, 12, 0.01, 0)  
+
+        #Initialise pre processor
+        self.coordinate_transform = estimation.DataPreProcessor()
+
+        #initialise navigation controller
+        self.navigation_controller = control.ObstacleAvoidance(max_obs=10)
+
+        self.navigation_map = estimation.DataPostProcessor()
+
+        #Initialize vector class of Vectormath
+        self.vec = vmath.vector()
 
 
         #Brake
