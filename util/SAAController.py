@@ -59,6 +59,7 @@ class ObstacleAvoidance(ObstacleHandle):
         self.heading = np.zeros(2)  # Heading of drone (Drone front) wrt inertial frame at takeoff position
         self.avoided = 0            # 0 ---> obstacle getting avoided     1 ----> obstacle avoided and drone front is free of obstacles
         self.avoiding = 0           # 1 ---> When not moving forward to avoid obstacle  1 ---->  When moving forward avoiding obstacle
+        self.overriding = 1         # # Initially pilot control 1 --> pilot control  0 --> Autpilot control
         self.pos_vector = [0,0]
 
         self.flight_test = 0        # When flight testing it should be one 
@@ -206,7 +207,7 @@ class ObstacleAvoidance(ObstacleHandle):
                             
                     #If angle is in range, engage the brakes                        
                     #@TODO: Range specified by params
-                    ##print(f'Obstacle found at : {obstacle_angle}')
+                    #print(obstacle_angle)
                     if abs(obstacle_angle)<10:
                         self.brake = 1
                         print(f"Brake {obstacle_angle} ---  {self.pos_vector} --- {obstacle_vector}")
@@ -217,17 +218,19 @@ class ObstacleAvoidance(ObstacleHandle):
 
         self.Guided_navigation()
         # if self.avoiding == 0:
-        #print(f'Guiding : {self.guiding}')
-        #print('----------------------')
-        print(f'Obstacle Map : {self.obstacle_map}')
-        print('----------------------')
+        # print(f'Avoid angle : {[i for i in self.avoid_angle if abs(i)<80]}')
+        # print('----------------------')
+        # print(f'Obstacle Map : {self.obstacle_map}')
+        # print('----------------------')
+        print(f'Pilot control  -------------------------    {self.overriding}')
+        print('--------------------------')
 
         
     def Guided_navigation(self):
         '''Navigating around the obstacle based on map'''
-        if self.guiding:
+        if self.guiding and not self.overriding:
             '''Basic avoidance using obstacle vector using right-front-left maneuver'''
-            print('Entered guided navigation mode')
+            ##print('Entered guided navigation mode')
             self.brake = 0
             self.Obstacle_detection() 
             if self.avoiding == 0:

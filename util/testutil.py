@@ -17,7 +17,6 @@ import logging
 # # # Another module
 import math
 import numpy as np
-#import matplotlib.pyplot as plt
 import util.VectorMath as vmath
 import util.SAADriver as driver
 import util.SAADataHandling as estimation
@@ -32,8 +31,7 @@ class TestCompanionComputer(CompanionComputer):
         # Threading Lock for TestCompanionComputer Class
         self.lock = threading.Lock()
         self.handleRecievedMsgThread = None
-
-        #Initialise SITL driver
+        
         self.lidar = driver.SensorDriver('RPLidar')
 
         #Connect to the listener - ensure the listener is running in background!!
@@ -68,7 +66,8 @@ class TestCompanionComputer(CompanionComputer):
         self.py = 0
 
         # Terminate trigger
-        self.terminate = 0
+        self.terminate = 0    
+        
 
         
     def init(self):
@@ -106,7 +105,7 @@ class TestCompanionComputer(CompanionComputer):
         self.scheduledTaskList.append(ScheduleTask(0.02, self.coordinate_transform.update_vehicle_states))
         self.scheduledTaskList.append(ScheduleTask(0.02, self.coordinate_transform.convert_body_to_inertial_frame))
 
-        self.scheduledTaskList.append(ScheduleTask(0.5, self.navigation_controller.predict_pos_vector)) # previously 0.5
+        self.scheduledTaskList.append(ScheduleTask(0.5, self.navigation_controller.predict_pos_vector))
         self.scheduledTaskList.append(ScheduleTask(0.01, self.navigation_controller.basic_stop))
         #self.scheduledTaskList.append(ScheduleTask(0.01, self.navigation_controller.Guided_navigation))
         self.scheduledTaskList.append(ScheduleTask(0.01, self.handbrake))
@@ -131,7 +130,7 @@ class TestCompanionComputer(CompanionComputer):
             print("Handbrake Initialize")
             self.initvar = 0
         #Only brake when previously brake command is not given, altitude is greater than 1
-        if self.brake and not self.alreadybraked and self.relativeAlt > 1:
+        if self.brake and not self.alreadybraked and self.relativeAlt>1:
             self.add_new_message_to_sending_queue(mavutil.mavlink.MAVLink_set_mode_message(self.mavlinkInterface.mavConnection.target_system,
                                                                                            mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
                                                                                            17))
@@ -151,8 +150,8 @@ class TestCompanionComputer(CompanionComputer):
 
         ################################# Change to GUIDED mode only if it first braked  #############################################
         if self.currentMode == 'BRAKE':
-            #print(self.alreadybraked and not self.navigation_controller.guide)
             while not self.navigation_controller.guide:
+                print('Forcing GUIDED mode')
                 self.add_new_message_to_sending_queue(mavutil.mavlink.MAVLink_set_mode_message(self.mavlinkInterface.mavConnection.target_system, 
                                                                                             mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
                                                                                             4))
@@ -166,9 +165,10 @@ class TestCompanionComputer(CompanionComputer):
             self.add_new_message_to_sending_queue(mavutil.mavlink.MAVLink_set_mode_message(self.mavlinkInterface.mavConnection.target_system, 
                                                                                            mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
                                                                                            3))
+            print('Forcing AUTO mode')
             if self.currentMode == 'AUTO':  # Why there was != and still it worked
                 self.navigation_controller.auto = 0
-            
+                
             print('Entered AUTO mode')
         ###########################################################################################################################
 
@@ -189,36 +189,50 @@ class TestCompanionComputer(CompanionComputer):
         if mode == 'AUTO':
             self.navigation_controller.ctrl = 0
             self.alreadybraked = 0     # To revert back the default value so that again the process if necessary can be repeated
+            self.overriding = 0
+
+        ###### If pilot tries to switch to any mode except GUIDED and AUTO, stop everything in code ######
+        # if mode == 'LOITER':
+        #     self.terminate = 1
+        if mode !='AUTO' and mode !='GUIDED' and mode !='BRAKE':
+            self.overriding = 1
+            # If pilot has overrided, then change all triggers to default values
+            if self.overriding:
+                self.brake = 0
+                self.guide = 0              
+                self.guiding = 0            
+                self.auto = 0               
+                self.ctrl = 0               
+                self.stop = 0
+                self.avoided = 0            
+                self.avoiding = 0
             
-        if mode == 'LOITER':
-            self.terminate = 1
 
     def maneuver(self): 
-        #print(f'{self.navigation_controller.ctrl and self.navigation_controller.guide} --- {self.currentMode}')
         if self.navigation_controller.ctrl and self.navigation_controller.guide:
             # Navigate rightward unless drone sees safe angle
             if not self.navigation_controller.stop and not self.navigation_controller.avoided:
-                self.mavlinkInterface.mavConnection.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message( 10, self.mavlinkInterface.mavConnection.target_system, self.mavlinkInterface.mavConnection.target_component, mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, int(0b010111000111), 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0))
-                print('Moving right !!!')
+                self.mavlinkInterface.mavConnection.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message( 10, self.mavlinkInterface.mavConnection.target_system, self.mavlinkInterface.mavConnection.target_component, mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, int(0b010111000111), 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0))
+                ##print('Moving right !!!')
 
             # Stop command in Guided mode
             if self.navigation_controller.stop and not self.navigation_controller.avoided:
                 self.mavlinkInterface.mavConnection.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message( 10, self.mavlinkInterface.mavConnection.target_system, self.mavlinkInterface.mavConnection.target_component, mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, int(0b010111000111), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
-                print('Forced Stop !')
+                ##print('Forced Stop !')
 
             # Moving Forward command in Guided mode
             #print(f'                                                  {not self.navigation_controller.stop and self.navigation_controller.avoided}')
             if not self.navigation_controller.stop and self.navigation_controller.avoided:
                 #print('                                                                                      Forward movement maneuver condition')
-                self.mavlinkInterface.mavConnection.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message( 10, self.mavlinkInterface.mavConnection.target_system, self.mavlinkInterface.mavConnection.target_component, mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, int(0b110111000111), 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0))
-                print('Moving forward !!!')
+                self.mavlinkInterface.mavConnection.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message( 10, self.mavlinkInterface.mavConnection.target_system, self.mavlinkInterface.mavConnection.target_component, mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, int(0b110111000111), 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0))
+                ##print('Moving forward !!!')
 
     def termination(self):
-        '''Flight test safety purpose'''
-        if self.terminate == 1:
+        '''Flight Test safety purpose'''
+        if self.terminate == 1: 
             for task in self.scheduledTaskList:
                 task.stop()
-            print('Terminated')
+            print('Terminated')  
         
 
     def previous_position_storer(self):
@@ -237,8 +251,7 @@ class TestCompanionComputer(CompanionComputer):
         # for i in range(self.navigation_controller.obstacle_map):
         #     obstacle = [self.navigation_controller.obstacle_map[i,0], self.navigation_controller.obstacle_map[i,1]]
         #plt.clf()
-        plt.plot(self.navigation_map.map[:,0], self.navigation_controller.obstacle_map[:,1], 'o')
-        plt.show()
+        print(self.scheduledTaskList)
 
         
 
@@ -275,6 +288,8 @@ class TestCompanionComputer(CompanionComputer):
 
         self.navigation_controller.prev_px = self.prev_px
         self.navigation_controller.prev_py = self.prev_py
+        # Pilot overriding logic
+        self.navigation_controller.overriding = self.overriding
 
 
 
