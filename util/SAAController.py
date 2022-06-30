@@ -187,7 +187,7 @@ class ObstacleAvoidance(ObstacleHandle):
                 if True:
                     
                     #If drone is not moving or obstacle is beyond the specified limits -> don't engage 
-                    if(self.vec.mag2d(self.pos_vector)<=0.05 or self.vec.mag2d(obstacle_vector)<=0.5 or self.vec.mag2d(obstacle_vector)>=self.engaging_distance):                    
+                    if(self.vec.mag2d(self.pos_vector)<=0.02 or self.vec.mag2d(obstacle_vector)<=0.5 or self.vec.mag2d(obstacle_vector)>=self.engaging_distance):                    
                         obstacle_angle = 1000
                     
                     #Compute the angle between the predicted position and obstacle on the field
