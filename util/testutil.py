@@ -17,7 +17,6 @@ import logging
 # # # Another module
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 import util.VectorMath as vmath
 import util.SAADriver as driver
 import util.SAADataHandling as estimation
@@ -83,9 +82,9 @@ class TestCompanionComputer(CompanionComputer):
 
         ### Starting reading threads as they are while loops ###
         t1 = threading.Thread(target=self.lidar.give_scan_values)
-        #t1.start()
+        t1.start()
         t2 = threading.Thread(target=self.lidar.read_fast)
-        #t2.start()
+        t2.start()
         
         
         # set data stream rate
@@ -169,7 +168,8 @@ class TestCompanionComputer(CompanionComputer):
             print('Forcing AUTO mode')
             if self.currentMode == 'AUTO':  # Why there was != and still it worked
                 self.navigation_controller.auto = 0
-                ##print('Entered AUTO mode')
+                
+            print('Entered AUTO mode')
         ###########################################################################################################################
 
     def check_mode(self, out):
