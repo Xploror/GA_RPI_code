@@ -199,13 +199,13 @@ class TestCompanionComputer(CompanionComputer):
             # If pilot has overrided, then change all triggers to default values
             if self.overriding:
                 self.brake = 0
-                self.guide = 0              
-                self.guiding = 0            
-                self.auto = 0               
-                self.ctrl = 0               
-                self.stop = 0
-                self.avoided = 0            
-                self.avoiding = 0
+                self.navigation_controller.guide = 0              
+                self.navigation_controller.guiding = 0            
+                self.navigation_controller.auto = 0               
+                self.navigation_controller.ctrl = 0               
+                self.navigation_controller.stop = 0
+                self.navigation_controller.avoided = 0            
+                self.navigation_controller.avoiding = 0
             
 
     def maneuver(self): 
