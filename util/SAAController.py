@@ -126,39 +126,39 @@ class ObstacleAvoidance(ObstacleHandle):
         """Basic detection and updating obstacle_vector from latest obstacle_map
         """
         # Important : This section is to give relavant obstacle_angle needed for right maneuvor only (obstacle avoid)
-        if self.avoiding == 0:
-            self.obstacle_angle = np.array([])
-            if self.obstacle_map is not None:
-                obstacle_map_copy = self.obstacle_map
-                for i in range(np.size(obstacle_map_copy,axis=0)):
-                    obstacle_vector = [obstacle_map_copy[i,0],obstacle_map_copy[i,1]]                          
-                    if True:
+        #if self.avoiding == 0:
+        self.obstacle_angle = np.array([])
+        if self.obstacle_map is not None:
+            obstacle_map_copy = self.obstacle_map
+            for i in range(np.size(obstacle_map_copy,axis=0)):
+                obstacle_vector = [obstacle_map_copy[i,0],obstacle_map_copy[i,1]]                          
+                if True:
                             
-                        #If obstacle is beyond the specified limits -> don't engage 
-                        if(self.vec.mag2d(obstacle_vector)<=0.5 or self.vec.mag2d(obstacle_vector)>=self.engaging_distance):                    
-                            self.obstacle_angle = np.append(self.obstacle_angle, 1000)
+                    #If obstacle is beyond the specified limits -> don't engage 
+                    if(self.vec.mag2d(obstacle_vector)<=0.5 or self.vec.mag2d(obstacle_vector)>=self.engaging_distance):                    
+                        self.obstacle_angle = np.append(self.obstacle_angle, 1000)
                         
-                        #Compute the angle between the predicted position and obstacle on the field
-                        else:
-                            self.obstacle_angle = np.append(self.obstacle_angle, round(math.acos(np.dot(self.heading,obstacle_vector)/(self.vec.mag2d(self.heading)*self.vec.mag2d(obstacle_vector)))*180/math.pi,2))
+                    #Compute the angle between the predicted position and obstacle on the field
+                    else:
+                        self.obstacle_angle = np.append(self.obstacle_angle, round(math.acos(np.dot(self.heading,obstacle_vector)/(self.vec.mag2d(self.heading)*self.vec.mag2d(obstacle_vector)))*180/math.pi,2))
                 
 
         # Important : This section is to give relavant obstacle_angle needed for front maneuvor only (obstacle avoiding)
-        else:
-            self.avoid_angle = np.array([])
-            if self.obstacle_body is not None:
-                obstacle_map_copy = self.obstacle_body
-                for i in range(np.size(obstacle_map_copy,axis=0)):
-                    obstacle_vector = [obstacle_map_copy[i,0],obstacle_map_copy[i,1]]                          
-                    if True:
+        # else:
+        #     self.avoid_angle = np.array([])
+        #     if self.obstacle_body is not None:
+        #         obstacle_map_copy = self.obstacle_body
+        #         for i in range(np.size(obstacle_map_copy,axis=0)):
+        #             obstacle_vector = [obstacle_map_copy[i,0],obstacle_map_copy[i,1]]                          
+        #             if True:
                         
-                        #If obstacle is beyond the specified limits -> don't engage 
-                        if(self.vec.mag2d(obstacle_vector)<=0.5 or self.vec.mag2d(obstacle_vector)>=self.engaging_distance):                    
-                            self.avoid_angle = np.append(self.avoid_angle, 1000)
+        #                 #If obstacle is beyond the specified limits -> don't engage 
+        #                 if(self.vec.mag2d(obstacle_vector)<=0.5 or self.vec.mag2d(obstacle_vector)>=self.engaging_distance):                    
+        #                     self.avoid_angle = np.append(self.avoid_angle, 1000)
                         
-                        #Compute the angle between the predicted position and obstacle on the field
-                        else:
-                            self.avoid_angle = np.append(self.avoid_angle, round(math.acos(np.dot(self.heading,obstacle_vector)/(self.vec.mag2d(self.heading)*self.vec.mag2d(obstacle_vector)))*180/math.pi,2))            
+        #                 #Compute the angle between the predicted position and obstacle on the field
+        #                 else:
+        #                     self.avoid_angle = np.append(self.avoid_angle, round(math.acos(np.dot(self.heading,obstacle_vector)/(self.vec.mag2d(self.heading)*self.vec.mag2d(obstacle_vector)))*180/math.pi,2))            
                 
         obstacle_vector = None  
         obstacle_map_copy = None      
@@ -240,14 +240,13 @@ class ObstacleAvoidance(ObstacleHandle):
                     self.ctrl = 1            #  make the drone 
                     self.stop = 0            #  move right unless no obstacle in-front
                 else:
-                    self.stop = 1            
-                    #time.sleep(1)            # This will stop drone for 5 seconds when no obstacle in-front
+                    self.stop = 1                       
                     self.avoiding = 1
-                    #time.sleep(1)
                     print('NO obstacle between +-10 deg')
             else:
-                if np.any(abs(self.avoid_angle) < 80):   # Usually delay in data so 80 deg else targetting 100 deg clearance
-                    if np.any(abs(self.avoid_angle) < 10):
+                #print([i for i in self.obstacle_angle if i!=1000])
+                if np.any(abs(self.obstacle_angle) < 80):    
+                    if np.any(abs(self.obstacle_angle) < 10):
                         self.avoiding = 0  #   If any obstacle is still under 10 degrees then switch to right maneuver
                     else:
                         self.avoided = 1       #  This will call
