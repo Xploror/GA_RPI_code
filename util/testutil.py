@@ -68,7 +68,8 @@ class TestCompanionComputer(CompanionComputer):
         # Terminate trigger
         self.terminate = 0    
         
-
+        # Pilot overriding
+        self.overriding = 1    # Initially pilot control
         
     def init(self):
         super().init()
@@ -101,20 +102,21 @@ class TestCompanionComputer(CompanionComputer):
         #self.scheduledTaskList.append(ScheduleTask(0.000000000000000001, self.lidar.give_scan_values))
         #self.give_scan_values()
         self.scheduledTaskList.append(ScheduleTask(0.00002,self.lidar.update_rplidar))
-        self.scheduledTaskList.append(ScheduleTask(0.02,self.front_sensor.handle_raw_data))
-        self.scheduledTaskList.append(ScheduleTask(0.02, self.coordinate_transform.update_vehicle_states))
-        self.scheduledTaskList.append(ScheduleTask(0.02, self.coordinate_transform.convert_body_to_inertial_frame))
+        self.scheduledTaskList.append(ScheduleTask(0.05,self.front_sensor.handle_raw_data))
+        self.scheduledTaskList.append(ScheduleTask(0.01, self.coordinate_transform.update_vehicle_states))
+        self.scheduledTaskList.append(ScheduleTask(0.05, self.coordinate_transform.convert_body_to_inertial_frame))
 
-        self.scheduledTaskList.append(ScheduleTask(0.5, self.navigation_controller.predict_pos_vector))
-        self.scheduledTaskList.append(ScheduleTask(0.01, self.navigation_controller.basic_stop))
+        self.scheduledTaskList.append(ScheduleTask(0.01, self.navigation_controller.predict_pos_vector))
+        self.scheduledTaskList.append(ScheduleTask(0.02, self.navigation_controller.basic_stop))
         #self.scheduledTaskList.append(ScheduleTask(0.01, self.navigation_controller.Guided_navigation))
         self.scheduledTaskList.append(ScheduleTask(0.01, self.handbrake))
         self.scheduledTaskList.append(ScheduleTask(0.01, self.trigger_avoidance))
         #self.scheduledTaskList.append(ScheduleTask(0.05, self.check_mode(False)))
-        self.scheduledTaskList.append(ScheduleTask(0.01, self.maneuver))
-        self.scheduledTaskList.append(ScheduleTask(0.05,self.navigation_stack))
+        self.scheduledTaskList.append(ScheduleTask(0.02, self.maneuver))
+        self.scheduledTaskList.append(ScheduleTask(0.03,self.navigation_stack))
         self.scheduledTaskList.append(ScheduleTask(0.02,self.navigation_map.forget_far_obstacles))  # default was 1
-        self.scheduledTaskList.append(ScheduleTask(0.02,self.termination))
+        self.scheduledTaskList.append(ScheduleTask(0.03,self.obstacle_storing_map))
+        #self.scheduledTaskList.append(ScheduleTask(0.03,self.termination))
         # self.scheduledTaskList.append(ScheduleTask(0.05,self.debug))
 
 
@@ -196,6 +198,7 @@ class TestCompanionComputer(CompanionComputer):
         #     self.terminate = 1
         if mode !='AUTO' and mode !='GUIDED' and mode !='BRAKE':
             self.overriding = 1
+            print('Pilot Overrided')
             # If pilot has overrided, then change all triggers to default values
             if self.overriding:
                 self.brake = 0
@@ -292,6 +295,25 @@ class TestCompanionComputer(CompanionComputer):
         self.navigation_controller.overriding = self.overriding
 
 
+    def obstacle_storing_map(self):
+        # Storing previosly detected obstacles inertial position in self.obstacle_inertial, do it only when guiding = True
+        t1 = time.time()
+        if self.navigation_controller.guiding == 1:
+            if self.navigation_controller.obstacle_inertial.size == 0:
+                self.navigation_controller.obstacle_inertial = np.array([[self.coordinate_transform.px,self.coordinate_transform.py]])
+                #self.navigation_controller.obstacle_inertial = np.array([[0,0]])
+            
+            # self.navigation_controller.obstacle_inertial = np.unique(np.concatenate((self.navigation_controller.obstacle_inertial,self.navigation_map.convert_rel_to_inertial_avoid(self.navigation_controller.obstacle_map)),axis=0),axis=0)
+            # self.navigation_controller.obstacle_inertial = np.array([i for i in self.navigation_controller.obstacle_inertial if self.vec.mag2d(self.navigation_map.convert_inertial_to_rel_avoid(i))<30])
+            #self.navigation_controller.mag_obs_inertial = np.array([self.vec.mag2d(self.navigation_map.convert_inertial_to_rel_avoid(i)) for i in self.navigation_controller.obstacle_inertial])
+
+            self.navigation_controller.obstacle_body = np.array([self.navigation_map.convert_inertial_to_rel_avoid(i) for i in self.navigation_controller.obstacle_inertial])
+        else:
+            pass
+
+        t2 = time.time()
+        print(f'time ---> {t2-t1}')
+        print('----------------------')
 
     def navigation_stack(self):
         """Update vars function was getting filled....
@@ -303,17 +325,6 @@ class TestCompanionComputer(CompanionComputer):
 
         #Relative obstacle is sent to the navigation algorithm
         self.navigation_controller.obstacle_map = self.navigation_map.convert_inertial_to_rel()
-        
-        # Storing previosly detected obstacles inertial position in self.obstacle_inertial
-        if self.navigation_controller.obstacle_inertial.size == 0:
-            self.navigation_controller.obstacle_inertial = np.array([[self.coordinate_transform.px,self.coordinate_transform.py]])
-            #self.navigation_controller.obstacle_inertial = np.array([[0,0]])
-
-        self.navigation_controller.obstacle_inertial = np.unique(np.concatenate((self.navigation_controller.obstacle_inertial,self.navigation_map.convert_rel_to_inertial_avoid(self.navigation_controller.obstacle_map)),axis=0),axis=0)
-        self.navigation_controller.obstacle_inertial = np.array([i for i in self.navigation_controller.obstacle_inertial if self.vec.mag2d(self.navigation_map.convert_inertial_to_rel_avoid(i))<30])
-        self.navigation_controller.mag_obs_inertial = np.array([self.vec.mag2d(self.navigation_map.convert_inertial_to_rel_avoid(i)) for i in self.navigation_controller.obstacle_inertial])
-
-        self.navigation_controller.obstacle_body = np.array([self.navigation_map.convert_inertial_to_rel_avoid(i) for i in self.navigation_controller.obstacle_inertial])
 
 
          
